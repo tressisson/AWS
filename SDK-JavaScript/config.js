@@ -1,5 +1,5 @@
 
-var credentials = { accessKeyId: '', secretAccessKey: '' }
+var credentials = { accessKeyId: '', secretAccessKey: '' };
 var myConfig = new AWS.Config({
     credentials: credentials, region: 'us-west-2'
 });
