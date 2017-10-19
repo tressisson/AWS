@@ -1,0 +1,109 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "CloudFormation template that creates a DynamoDB table and Lambda function",
+  "Resources" : {
+    "LambdaRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": ["lambda.amazonaws.com"]
+                    },
+                    "Action": ["sts:AssumeRole"]
+                }
+            ]
+        },
+        "Path": "/",
+        "Policies": [{
+          "PolicyName": "root",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:PutItem"
+                ],
+                "Resource": [
+                    "*"
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents"
+                ],
+                "Resource": "arn:aws:logs:*:*:*"
+              }
+            ]
+          }
+        }]
+       }
+      },
+      "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": [
+          "myDynamoDBTable"
+      ],
+      "Properties": {
+        "Code": {
+            "S3Bucket": "la-lambda-functions",
+            "S3Key": "serverless-newsletter-registration.zip"
+        },
+        "Role": {
+            "Fn::GetAtt": ["LambdaRole", "Arn"]
+        },
+        "Description": "Newsletter registration and notification",
+        "Timeout": 5,
+        "Handler": "index.handler",
+        "Runtime": "nodejs",
+        "MemorySize": 128
+      }
+    },
+    "myDynamoDBTable" : {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions": [ 
+        { 
+          "AttributeName" : "Email",
+          "AttributeType" : "S"
+        } ],
+        "KeySchema": [
+          { 
+            "AttributeName": "Email", 
+            "KeyType": "HASH" 
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "4",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName": "Newsletters"                
+      }
+    },
+    "SiteHosting": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "la-newsletter-registration",
+        "AccessControl": "PublicRead",
+        "CorsConfiguration": {
+            "CorsRules": [
+            {
+                "AllowedHeaders": ["*"],
+                "AllowedMethods": ["GET", "PUT"],
+                "AllowedOrigins": ["*"]
+            }]
+        },
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html"
+        }
+      }
+    }
+  }
+}

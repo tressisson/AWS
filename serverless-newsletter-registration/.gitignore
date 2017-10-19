@@ -1,0 +1,6 @@
+node_modules/
+*.swp
+*.env
+*.DS_Store
+aws-files/.DS_Store
+aws-files/node_modules
